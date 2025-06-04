@@ -1,0 +1,193 @@
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+class MultiSet {
+private:
+    unsigned int* data;
+    unsigned int beg, end;
+    int status;
+    static int objectCount;
+
+public:
+    // Конструктори
+    MultiSet() : beg(0), end(100), status(0) {
+        allocateAndInitialize(0); 
+    }
+
+    MultiSet(unsigned int _end) : beg(0), end(_end), status(0) {
+        allocateAndInitialize(0);
+    }
+
+    MultiSet(unsigned int _beg, unsigned int _end) : beg(_beg), end(_end), status(0) {
+        allocateAndInitialize(0);
+    }
+
+    MultiSet(unsigned int _beg, unsigned int _end, unsigned int value) : beg(_beg), end(_end), status(0) {
+        allocateAndInitialize(value);
+    }
+
+    MultiSet(const MultiSet& other) {
+        beg = other.beg;
+        end = other.end;
+        status = other.status;
+        data = new (nothrow) unsigned int[end - beg];
+        if (data)
+            for (unsigned int i = 0; i < end - beg; ++i)
+                data[i] = other.data[i];
+        else
+            status = 1;
+        ++objectCount;
+    }
+
+    MultiSet& operator=(const MultiSet& other) {
+        if (this != &other) {
+            delete[] data;
+            beg = other.beg;
+            end = other.end;
+            status = other.status;
+            data = new (nothrow) unsigned int[end - beg];
+            if (data)
+                for (unsigned int i = 0; i < end - beg; ++i)
+                    data[i] = other.data[i];
+            else
+                status = 1;
+        }
+        return *this;
+    }
+
+    ~MultiSet() {
+        delete[] data;
+        --objectCount;
+    }
+
+    void allocateAndInitialize(unsigned int value) {
+        data = new (nothrow) unsigned int[end - beg]; // створює масив 
+        if (data) {
+            for (unsigned int i = 0; i < end - beg; ++i)
+                data[i] = value; // заповнює весь масив значенням value
+            status = 0;
+        } else {
+            status = 1;
+        }
+        ++objectCount;
+    }
+
+    void set(unsigned int number, unsigned int value = 1) {
+        if (number < beg || number >= end) {
+            status = 2; 
+            return;
+        }
+        data[number - beg] = value; // встановлює значення елементу 
+    }
+
+    unsigned int get(unsigned int number) const {
+        if (number < beg || number >= end)
+            return 0;
+        return data[number - beg]; // повертає кількість повторень
+    }
+
+    void print() const {
+        cout << "Множина [" << beg << ", " << end << "):\n";
+        for (unsigned int i = 0; i < end - beg; ++i)
+            if (data[i] > 0)
+                cout << (beg + i) << " -> " << data[i] << "\n";
+    }
+
+    MultiSet unionWith(const MultiSet& other) const {
+        unsigned int newBeg = min(beg, other.beg);
+        unsigned int newEnd = max(end, other.end);
+        MultiSet result(newBeg, newEnd);
+        for (unsigned int i = newBeg; i < newEnd; ++i)
+            result.set(i, max(this->get(i), other.get(i)));
+        return result;
+    }
+
+    MultiSet intersectWith(const MultiSet& other) const {
+        unsigned int newBeg = max(beg, other.beg);
+        unsigned int newEnd = min(end, other.end);
+        if (newBeg >= newEnd)
+            return MultiSet(newBeg, newEnd);
+        MultiSet result(newBeg, newEnd);
+        for (unsigned int i = newBeg; i < newEnd; ++i)
+            result.set(i, min(this->get(i), other.get(i)));
+        return result;
+    }
+
+    MultiSet differenceWith(const MultiSet& other) const {
+        MultiSet result(beg, end);
+        for (unsigned int i = beg; i < end; ++i) {
+            int diff = (int)this->get(i) - (int)other.get(i);
+            result.set(i, diff > 0 ? diff : 0);
+        }
+        return result;
+    }
+
+    bool operator==(const MultiSet& other) const {
+        if (beg != other.beg || end != other.end) return false;
+        for (unsigned int i = 0; i < end - beg; ++i)
+            if (data[i] != other.data[i])
+                return false;
+        return true;
+    }
+
+    bool operator!=(const MultiSet& other) const {
+        return !(*this == other);
+    }
+
+    bool operator<(const MultiSet& other) const {
+        for (unsigned int i = beg; i < end; ++i)
+            if (this->get(i) >= other.get(i))
+                return false;
+                return true;
+    }
+
+    bool operator>(const MultiSet& other) const {
+        for (unsigned int i = beg; i < end; ++i)
+            if (this->get(i) <= other.get(i))
+                return false;
+        return true;
+    }
+
+    int getStatus() const { return status; }
+    static int getObjectCount() { return objectCount; }
+};
+
+int MultiSet::objectCount = 0;
+
+int main() {
+    unsigned int beg1, end1, beg2, end2, val1, val2;
+    cout << "Введіть діапазон для множини A : ";
+    cin >> beg1 >> end1 >> val1;
+    MultiSet a(beg1, end1, val1);
+
+    cout << "Введіть діапазон для множини B : ";
+    cin >> beg2 >> end2 >> val2;
+    MultiSet b(beg2, end2, val2);
+
+    cout << "\nМножина A:\n";
+    a.print();
+
+    cout << "\nМножина B:\n";
+    b.print();
+
+    MultiSet u = a.unionWith(b);
+    cout << "\nОб'єднання A і B:\n";
+    u.print();
+
+    MultiSet i = a.intersectWith(b);
+    cout << "\nПеретин A і B:\n";
+    i.print();
+
+    MultiSet d = a.differenceWith(b);
+    cout << "\nРізниця A - B:\n";
+    d.print();
+
+    cout << "\nA == B? " << (a == b ? "Так" : "Ні") << "\n";
+    cout << "A < B? " << (a < b ? "Так" : "Ні") << "\n";
+    cout << "A > B? " << (a > b ? "Так" : "Ні") << "\n";
+
+    cout << "\nКількість створених об'єктів: " << MultiSet::getObjectCount() << "\n";
+
+    return 0;
+}
