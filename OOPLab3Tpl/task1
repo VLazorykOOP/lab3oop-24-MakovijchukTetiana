@@ -1,0 +1,96 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+class Cube {
+    double side;
+    unsigned int color;
+
+public:
+    // Конструктори
+    Cube() : side(1.0), color(0) {}
+    explicit Cube(double s) : side(s), color(0) {}
+    explicit Cube(int c) : side(1.0), color((c >= 0 && c <= 10000) ? c : 0) {}
+    Cube(double s, int c) {
+        setSide(s);
+        setColor(c);
+    }
+
+    // Встановлення значень
+    void setSide(double s) {
+        if (s > 0 && s < 1.e+100) {
+            side = s;
+        } else {
+            cout << "Помилка: некоректна довжина сторони!\n";
+        }
+    }
+
+    void setColor(int c) {
+        if (c >= 0 && c <= 10000) {
+            color = c;
+        } else {
+            cout << "Помилка: некоректне значення кольору!\n";
+        }
+    }
+
+    // Отримання значень
+    double getSide() const { return side; }
+    unsigned int getColor() const { return color; }
+
+    // Обчислення
+    double surfaceArea() const {
+        return 6 * side * side;
+    }
+
+    double volume() const {
+        return side * side * side;
+    }
+
+    double diagonal() const {
+        return side * sqrt(3);
+    }
+
+    double inscribedSphereVolume() const {
+        double r = side / 2;
+        return (4.0 / 3.0) * M_PI * pow(r, 3);
+    }
+
+    void printInfo() const {
+        cout << "\nКуб:";
+        cout << "\nСторона: " << side;
+        cout << "\nКолір: " << color;
+        cout << "\nПлоща поверхні: " << surfaceArea();
+        cout << "\nОб'єм: " << volume();
+        cout << "\nДіагональ: " << diagonal();
+        cout << "\nОб'єм вписаної сфери: " << inscribedSphereVolume() << "\n";
+    }
+};
+
+int main() {
+    Cube obj;
+    obj.printInfo();
+
+    double in_side;
+    int in_color;
+    cout << "Введіть сторону та колір куба: ";
+    cin >> in_side >> in_color;
+
+    Cube obj1(in_side), obj2(in_color), obj3(in_side, in_color);
+    obj1.printInfo();
+    obj2.printInfo();
+    obj3.printInfo();
+
+    // Тестування обмежень
+    obj.setSide(-5);
+    obj.setSide(5);
+    obj.setSide(2.e100);
+
+    obj.setColor(-10);
+    obj.setColor(10);
+    obj.setColor(10001);
+
+    obj.printInfo();
+
+    cout << "Тестування завершено.\n";
+    return 0;
+}
